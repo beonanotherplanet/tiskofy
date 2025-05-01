@@ -27,3 +27,4 @@ dist-ssr
 /public
 
 .DS_Store
+._.DS_Store

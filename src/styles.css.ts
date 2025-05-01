@@ -23,23 +23,12 @@ export const font = style({
 
 export const background = style({
   width: "100%",
-  height: "100vh",
-  // background: "#D3E9FF88",
-  // background: "linear-gradient(to 45deg, #F8D3FF88, #D3E9FF88, #E0D3FE88)",
-  background: "url(/bg.png)",
-  backgroundSize: "cover",
-  position: "absolute",
-  top: 0,
-  left: 0,
   display: "flex",
   flexDirection: "column",
-  justifyContent: "center",
-  alignItems: "stretch",
 });
 
 export const box_container = style({
   width: 400,
-  height: 400,
   display: "flex",
   flexWrap: "wrap",
 });
@@ -65,35 +54,13 @@ export const hover_box = style({
 });
 
 export const description_box = style({
-  width: "80%",
+  width: "100%",
+  color: "#111",
   fontFamily: wantedSans,
-  color: "#1E232588",
   borderRadius: 12,
-  margin: "40px auto",
   fontSize: 14,
-  textAlign: "center",
-  backdropFilter: "blur(10px)",
-  background: "#ffffff44",
-  border: "1px solid #FFFFFF99",
-  padding: 32,
+  padding: 40,
 });
-
-// export const container = style({
-//   width: "80%",
-//   display: "flex",
-//   flexDirection: "column",
-//   borderRadius: 20,
-//   backdropFilter: "blur(18px)",
-//   background: "#ffffff33",
-//   border: "1px solid #E0EFF355",
-//   padding: "60px 40px 100px",
-//   position: "absolute",
-//   top: 200,
-//   left: "50%",
-//   transform: "translateX(-50%)",
-//   fontFamily: wantedSans,
-//   maxWidth: 1000,
-// });
 
 const spin = keyframes({
   from: { transform: "rotate(0deg)" },
@@ -106,46 +73,48 @@ export const loading = style({
 
 export const input_box = style({
   display: "flex",
-  justifyContent: "space-between",
   alignItems: "center",
-  width: "85%",
-  margin: "60px auto 40px",
+  width: "100%",
+  padding: "40px 40px 0",
+  boxSizing: "border-box",
 });
 
 export const input = style({
-  width: "80%",
-  padding: "2px 24px",
-  fontSize: "16px",
-  height: 42,
-  border: "1px solid #E4E8E9",
-  boxShadow: "0px 0px 8px #E4E8E999",
+  padding: "2px 12px",
+  fontSize: "14px",
+  minWidth: 300,
+  height: 36,
+  color: "#111",
+  boxSizing: "border-box",
+  border: "1px solid #ddd",
+  boxShadow: "0px 0px 8px #eeeeee99",
   fontFamily: wantedSans,
-  borderRadius: 30,
+  borderRadius: 8,
   ":focus": {
     outline: "none",
   },
   "::placeholder": {
-    color: "#0B2B4955",
+    color: "#55555555",
   },
 });
 
 export const download_button = style({
-  borderRadius: 30,
-  height: 48,
-  fontSize: "16px",
+  borderRadius: 8,
+  padding: "2px 12px",
+  fontSize: "14px",
+  height: 36,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
   color: "#fff",
-  background: "#1E2325",
-  width: 160,
-  marginLeft: 40,
-  border: "1px solid #ffffff88",
-  boxShadow: "0px 0px 8px #1E232599",
+  background: "#111",
+  width: 120,
+  marginLeft: 12,
+  border: "1px solid #111",
+  boxShadow: "0px 0px 8px #eeeeee99",
   cursor: "pointer",
-  transition: "all 0.4s",
   ":hover": {
-    background: "#1D6C89",
+    background: "#222",
   },
   ":disabled": {
     background: "#aaaaaa55",
@@ -167,33 +136,18 @@ export const footer = style({
   fontSize: 12,
   backdropFilter: "blur(20px)",
   fontFamily: wantedSans,
-  color: "#1E232555",
+  color: "#ddd",
   zIndex: 100,
-});
-
-export const table = style({
-  fontFamily: wantedSans,
-  fontSize: 12,
-  textAlign: "left",
-  border: "1px solid #fff",
-  width: "100%",
-  padding: 8,
-  background: "#ffffff77",
-  borderRadius: 8,
-});
-
-export const th = style({
-  fontFamily: wantedSans,
-  fontWeight: 700,
 });
 
 export const head = style({
   fontFamily: wantedSans,
-  fontWeight: 900,
-  fontSize: 36,
-  marginLeft: 60,
-  color: "#0B2B49",
-  marginBottom: 0,
+  fontWeight: 800,
+  fontSize: 32,
+  padding: "40px 40px 0",
+  color: "#111",
+  margin: 0,
+  textTransform: "uppercase",
 });
 
 export const status_style = style({
@@ -209,5 +163,5 @@ export const loading_container = style({
   display: "flex",
   justifyContent: "center",
   fontSize: 36,
-  color: "#00D94C",
+  color: "#111",
 });

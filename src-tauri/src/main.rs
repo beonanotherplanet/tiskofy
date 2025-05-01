@@ -13,149 +13,110 @@ fn sanitize_filename(title: &str) -> String {
 
 #[command]
 async fn download_mp3(url: String, app: AppHandle) -> String {
+    use std::path::{Path, PathBuf};
+
     eprintln!("[1] Start download_mp3");
 
     if !(url.contains("youtube.com") || url.contains("youtu.be")) {
         eprintln!("[Error] Invalid YouTube URL: {}", url);
-        return "invalid URL".to_string();
+        return "invalid URL".into();
     }
 
-    // yt-dlp
     let yt_dlp_path = match ensure_yt_dlp_exists().await {
-        Ok(path) => {
-            eprintln!("[2] yt-dlp path resolved: {:?}", path);
-            path
-        },
+        Ok(p) => {
+            eprintln!("[2] yt-dlp path resolved: {:?}", p);
+            p
+        }
         Err(e) => {
             eprintln!("[Error] Failed to ensure yt-dlp: {}", e);
             return format!("Error ensuring yt-dlp: {}", e);
         }
     };
 
-    // ffmpeg
     let ffmpeg_path = ensure_ffmpeg_exists().await.unwrap_or(None);
 
-    let mut cmd = Command::new(&yt_dlp_path);
-    cmd.args(["-x", "--audio-format", "mp3"]);
-
-    if let Some(ref path) = ffmpeg_path {
-        if let Some(path_str) = path.to_str() {
-            eprintln!("[Debug] --ffmpeg-location = {}", path_str);
-            cmd.args(["--ffmpeg-location", path_str]);
-        } else {
-            eprintln!("[Warning] Cannot convert ffmpeg path to str");
-        }
-    } else {
-        eprintln!("[Warning] ffmpeg not found, skipping --ffmpeg-location");
-    };
-
-    // Get video title
     let title_output = Command::new(&yt_dlp_path)
         .args(["--print", "title", &url])
         .output()
         .await;
 
     let video_title = match title_output {
-        Ok(output) => {
-            let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            eprintln!("[3] yt-dlp stdout: {}", stdout);
-            eprintln!("[3] yt-dlp stderr: {}", stderr);
-            if output.status.success() {
-                stdout
-            } else {
-                return format!("Error: yt-dlp failed to get title: {}", stderr);
-            }
-        },
-        Err(e) => {
-            return format!("Error: Failed to execute yt-dlp: {}", e);
+        Ok(out) if out.status.success() => {
+            let stdout = String::from_utf8_lossy(&out.stdout).trim().to_owned();
+            eprintln!("[3] yt-dlp title: {}", stdout);
+            stdout
         }
+        Ok(out) => {
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            return format!("Error: yt-dlp failed to get title: {}", stderr);
+        }
+        Err(e) => return format!("Error: Failed to execute yt-dlp: {}", e),
     };
 
     let sanitized_title = sanitize_filename(&video_title);
     eprintln!("[4] Sanitized title: {}", sanitized_title);
 
-    // Default downloads directory
-    let downloads_folder = app
+    let default_dir = app
         .path()
         .download_dir()
         .unwrap_or_else(|_| PathBuf::from("~/Downloads"));
 
-    eprintln!("[5] Default download folder: {:?}", downloads_folder);
-
-    // Open save file dialog
     let folder = app
         .dialog()
         .file()
-        .set_directory(downloads_folder)
-        .set_file_name(&video_title)
-        .blocking_save_file();
+        .set_directory(default_dir)
+        .blocking_pick_folder(); // 폴더만 선택
 
-    let folder_path = match folder {
-        Some(path) => {
-            let path_str = path.to_string();
-            eprintln!("[6] User selected folder: {}", path_str);
-            path_str
-        },
-        None => {
-            eprintln!("[Info] Save dialog canceled");
-            return "canceled".to_string();
-        }
+    let Some(folder_path) = folder else {
+        eprintln!("[Info] Folder pick canceled");
+        return "canceled".into();
     };
 
-    let output_path = format!("{}/{}.mp3", folder_path, sanitized_title);
-    eprintln!("[7] Output path: {}", output_path);
+    let folder_path = match folder_path.into_path() {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("[Error] Invalid folder path: {e}");
+            return format!("invalid folder path: {e}");
+        }
+    };
+    eprintln!("[5] User-selected folder: {}", folder_path.display());
 
+    let output_path = folder_path.join(format!("{}.mp3", sanitize_filename(&video_title)));
+    eprintln!("[6] Output path: {:?}", output_path);
 
-    cmd.args(["-o", &output_path, &url]);
+    let mut cmd = Command::new(&yt_dlp_path);
+    cmd.args(["-x", "--audio-format", "mp3", "-o"])
+        .arg(output_path.to_str().unwrap())
+        .arg(&url);
+
+    if let Some(ref ffmpeg) = ffmpeg_path {
+        if let Some(p) = ffmpeg.to_str() {
+            cmd.args(["--ffmpeg-location", p]);
+        }
+    }
+
 
     let output = cmd.output().await;
 
-    if let Some(path) = ffmpeg_path {
-        if let Some(path_str) = path.to_str() {
-            eprintln!("[Debug] Testing ffmpeg executable...");
-            let ffmpeg_test = Command::new(path_str)
-                .arg("-version")
-                .output()
-                .await;
-
-            match ffmpeg_test {
-                Ok(output) => {
-                    eprintln!("[Debug] ffmpeg version: {}", String::from_utf8_lossy(&output.stdout));
-                    cmd.args(["--ffmpeg-location", path_str]);
-                },
-                Err(e) => {
-                    eprintln!("[Error] ffmpeg not executable: {}", e);
-                }
-            }
-        }
-    };
-
     if let Ok(ref r) = output {
+        // 디버그용 로그 저장 (선택)
         std::fs::write("/tmp/yt-dlp-stdout.txt", &r.stdout).ok();
         std::fs::write("/tmp/yt-dlp-stderr.txt", &r.stderr).ok();
-    };
+    }
 
     match output {
-        Ok(result) => {
-            let stderr = String::from_utf8_lossy(&result.stderr);
-            let stdout = String::from_utf8_lossy(&result.stdout);
-            eprintln!("[8] yt-dlp stdout: {}", stdout);
-            eprintln!("[8] yt-dlp stderr: {}", stderr);
-
-            if result.status.success() {
-                eprintln!("[9] Download completed successfully");
-                format!("Ok: path= {}", folder_path)
-            } else {
-                format!("Error: yt-dlp failed: {}", stderr)
-            }
+        Ok(res) if res.status.success() => {
+            eprintln!("[7] Download completed successfully");
+            format!("Ok: path={}", output_path.display())
         }
-        Err(e) => {
-            eprintln!("[Error] Failed to run yt-dlp for download: {}", e);
-            format!("Error: Failed to run yt-dlp: {}", e)
+        Ok(res) => {
+            let stderr = String::from_utf8_lossy(&res.stderr);
+            format!("Error: yt-dlp failed: {}", stderr)
         }
+        Err(e) => format!("Error: Failed to run yt-dlp: {}", e),
     }
 }
+
 
 async fn ensure_yt_dlp_exists() -> io::Result<PathBuf> {
     let app_dir = match env::current_exe()?.parent() {
