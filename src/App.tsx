@@ -15,6 +15,7 @@ import {
   footer_link,
   loading_container,
 } from "./styles.css";
+import { match_url } from "./utils/url";
 
 type Status =
   | "completed"
@@ -30,12 +31,12 @@ type ErrorMsg = {
 
 const ERROR_MSG: ErrorMsg = {
   completed: "✅ The download is complete.",
-  "invalid-url": "❓ The URL is wrong. Please check the YouTube video URL.",
+  "invalid-url": "❓ The URL is wrong. Please check the URL.",
   unknown: "❌ An unexpected error has occurred.",
-  processing: "📁 busy extracting the audio from the YouTube clip...",
+  processing: "📁 busy extracting the audio from the web page...",
   canceled:
     "🥺 Oh, you canceled! That’s okay—just press the Download button again to continue.",
-  none: "...",
+  none: "-",
 };
 
 function App() {
@@ -45,22 +46,34 @@ function App() {
   const [err, setErr] = useState("");
 
   async function handleDownload() {
+    const service = match_url(url);
+
+    if (!service || !url.trim()) {
+      setStatus("invalid-url");
+      return;
+    }
+
     if (isLoading) {
       setStatus("canceled");
       setIsLoading(false);
       return;
     }
 
-    if (!url.trim()) {
-      setStatus("invalid-url");
-      return;
-    }
-
     setIsLoading(true);
-
     setStatus("processing");
+
     try {
-      const response = await invoke<string>("download_mp3", { url });
+      const getDownload = async () => {
+        switch (service) {
+          case "youtube":
+            return await invoke<string>("download_youtube", { url });
+          case "soundcloud":
+            return await invoke<string>("download_soundcloud", { url });
+        }
+      };
+
+      const response: any = await getDownload();
+
       console.log(response);
       if (response.startsWith("Error")) {
         setStatus("unknown");
@@ -94,14 +107,18 @@ function App() {
     <>
       <div className={background}>
         <header>
-          <h1 className={head}>Get the mp3 file from the Youtube URL</h1>
+          <h1 className={head}>
+            Get the mp3 file
+            <br />
+            from the url of various music platforms
+          </h1>
         </header>
         <main>
           <div className={input_box}>
             <input
               className={input}
               type="text"
-              placeholder="Copy & Paste the Youtube URL..."
+              placeholder="Copy & Paste the URL"
               name="url"
               value={url}
               onChange={({ target }) => setUrl(target.value)}
@@ -117,9 +134,9 @@ function App() {
             </button>
           </div>
           <div className={description_box}>
-            <p>Ver 1.1.0</p>
+            <p>ver 1.2.0</p>
+            <p>Currently, only YouTube and SoundCloud are supported.</p>
             <p className={status_style}>{ERROR_MSG[status]}</p>
-            <p>{status ? "status: " + status : "--"}</p>
             <div className={loading_container}>
               {isLoading && (
                 <span className={loading}>

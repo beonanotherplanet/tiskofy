@@ -38,28 +38,15 @@ export const delete_txt = style({
   fontSize: 12,
 });
 
-export const hover_box = style({
-  width: 40,
-  height: 40,
-  padding: 0,
-  margin: 0,
-  display: "inline-flex",
-  borderRight: "1px solid #E0EFF3",
-  borderBottom: "1px solid #E0EFF3",
-  transition: "opacity 1s ease-in-out",
-  ":hover": {
-    background: "#E0EFF3",
-    opacity: 1,
-  },
-});
-
 export const description_box = style({
   width: "100%",
   color: "#111",
   fontFamily: wantedSans,
   borderRadius: 12,
   fontSize: 14,
-  padding: 40,
+  padding: "12px 40px",
+  // background: "blue",
+  boxSizing: "border-box",
 });
 
 const spin = keyframes({
@@ -75,14 +62,14 @@ export const input_box = style({
   display: "flex",
   alignItems: "center",
   width: "100%",
-  padding: "40px 40px 0",
+  padding: "20px 40px 0",
   boxSizing: "border-box",
 });
 
 export const input = style({
   padding: "2px 12px",
   fontSize: "14px",
-  minWidth: 300,
+  minWidth: 400,
   height: 36,
   color: "#111",
   boxSizing: "border-box",
@@ -134,9 +121,8 @@ export const footer = style({
   width: "100%",
   padding: 10,
   fontSize: 12,
-  backdropFilter: "blur(20px)",
   fontFamily: wantedSans,
-  color: "#ddd",
+  color: "#aaa",
   zIndex: 100,
 });
 
@@ -161,7 +147,7 @@ export const footer_link = style({
 
 export const loading_container = style({
   display: "flex",
-  justifyContent: "center",
   fontSize: 36,
   color: "#111",
+  padding: "16px 32px",
 });
