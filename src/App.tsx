@@ -151,7 +151,11 @@ function App() {
       </div>
       <footer className={footer}>
         &copy; 2025 &nbsp;
-        <a className={footer_link} href="https://beonanotherplanet.com">
+        <a
+          className={footer_link}
+          target="_blank"
+          href="https://beonanotherplanet.com"
+        >
           Seungha Kim
         </a>
       </footer>
